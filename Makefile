@@ -37,7 +37,7 @@ export HOST_UID := $(shell id -u)
 export HOST_GID := $(shell id -g)
 
 # By default, build for amd64
-ARCH := amd64
+ARCH := arm64
 
 # Source-code paths of the sysbox binary targets.
 SYSRUNC_DIR     := sysbox-runc
@@ -106,7 +106,7 @@ export KERNEL_HEADERS
 export KERNEL_HEADERS_MOUNTS
 
 PACKAGE_FILE_PATH ?= sysbox-pkgr/deb/debbuild/$(IMAGE_BASE_DISTRO)-$(IMAGE_BASE_RELEASE)
-PACKAGE_FILE_NAME := $(PACKAGE)_$(VERSION)-0.$(IMAGE_BASE_DISTRO)-$(IMAGE_BASE_RELEASE)_amd64.deb
+PACKAGE_FILE_NAME := $(PACKAGE)_$(VERSION)-0.$(IMAGE_BASE_DISTRO)-$(IMAGE_BASE_RELEASE)_arm64.deb
 
 # Volumes to mount into the privileged test container. These are
 # required because certain mounts inside the test container can't
