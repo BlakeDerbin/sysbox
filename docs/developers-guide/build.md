@@ -35,7 +35,7 @@ or Focal) so that you can properly test your changes with and without `shiftfs`.
 Clone the repo with:
 
 ```
-git clone --recursive git@github.com:nestybox/sysbox.git
+git clone --recursive git@github.com:blakederbin/sysbox.git
 ```
 
 Sysbox uses Go modules, so you should clone this into a directory that is
