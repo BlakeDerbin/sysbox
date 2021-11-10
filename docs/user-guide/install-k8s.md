@@ -16,6 +16,7 @@ are installing Sysbox on a regular host (i.e., not a Kubernetes host), follow
 -   [Kubernetes Distro Requirements](#kubernetes-distro-requirements)
 -   [Kubernetes Version Requirements](#kubernetes-version-requirements)
 -   [Kubernetes Worker Node Requirements](#kubernetes-worker-node-requirements)
+-   [CRI-O Requirement](#cri-o-requirement)
 -   [Installation of Sysbox](#installation-of-sysbox)
 -   [Installation of Sysbox Enterprise Edition (Sysbox-EE)](#installation-of-sysbox-enterprise-edition-sysbox-ee)
 -   [Installation Manifests](#installation-manifests)
@@ -39,8 +40,11 @@ this document has only been tested in the following scenarios:
 | --------------------- | ------------------------------------------ | ------------------- |
 | Kubernetes (regular)  |  Ubuntu Bionic / Focal, Flatcar            | [(1)](install-k8s-distros.md#kubernetes-regular) |
 | Amazon EKS            |  Ubuntu Focal                              | [(2)](install-k8s-distros.md#aws-elastic-kubernetes-service-eks) |
-| Google GKE            |  Ubuntu-Containerd or Ubuntu-Docker images | [(3)](install-k8s-distros.md#google-kubernetes-engine-gke) |
-| Rancher RKE           |  Ubuntu Focal                               | [(4)](install-k8s-distros.md#rancher-kubernetes-engine-rke) |
+| Azure AKS             |  Ubuntu Bionic with Containerd             | [(3)](install-k8s-distros.md#azure-kubernetes-service-aks) |
+| Google GKE            |  Ubuntu-Containerd or Ubuntu-Docker images | [(4)](install-k8s-distros.md#google-kubernetes-engine-gke) |
+| Rancher RKE           |  Ubuntu Focal                              | [(5)](install-k8s-distros.md#rancher-kubernetes-engine-rke) |
+| Rancher RKE2          |  Ubuntu Focal                              | [(6)](install-k8s-distros.md#rancher-next-gen-kubernetes-engine-rke2) |
+| Kinvolk Lokomotive    |  Flatcar                                   | [(7)](install-k8s-distros.md#kinvolk-lokomotive) |
 
 Regardless of the elected Kubernetes distro and the pre-existing container
 runtime (i.e. containerd or docker), the Sysbox installation method presented
@@ -50,13 +54,12 @@ untouched.
 
 ## Kubernetes Version Requirements
 
-Sysbox is only supported on Kubernetes v1.20.\* at this time. We are currently working
-to have this extended to v1.21.
+Sysbox is only supported on the following Kubernetes versions:
 
-The reason for this v1.20 requirement is that Sysbox currently demands the presence
-of the CRI-O runtime v1.20, as the latter introduces support for "rootless pods" (i.e.,
-pods that use the Linux user-namespace). Since the version of CRI-O and K8s must match,
-the K8s version must also be v1.20.\*.
+-   Kubernetes v1.20.\*
+-   Kubernetes v1.21.\*
+
+Other versions of Kubernetes are not supported.
 
 ## Kubernetes Worker Node Requirements
 
@@ -69,15 +72,25 @@ Sysbox meets the following requirement:
     of RAM in each worker node. Though this is not a hard requirement, smaller
     configurations may slow down Sysbox.
 
+## CRI-O Requirement
+
+Sysbox currently requires the [CRI-O](https://cri-o.io/) runtime as it includes
+support for deploying Kubernetes pods with the Linux user namespace (for
+stronger isolation). Containerd does not yet include this support.
+
+**NOTE: You don't need to install CRI-O prior to installing Sysbox. The Sysbox
+installer for Kubernetes (see next section) automatically installs CRI-O on the
+desired Kubernetes worker nodes and configures the Kubelet appropriately.**
+
 ## Installation of Sysbox
 
 **NOTE: These instructions work generally in all Kubernetes clusters. For
 additional instructions specific to a Kubernetes distribution, refer to
 [this](install-k8s-distros.md) document.**
 
-Installation is done via a daemonset called "sysbox-deploy-k8s", which installs
-the CRI-O and Sysbox binaries onto the desired K8s nodes and performs all
-associated config.
+Installation is easily done via a daemonset called "sysbox-deploy-k8s", which
+installs the Sysbox and CRI-O binaries onto the desired K8s nodes and performs
+all associated config.
 
 Steps:
 
@@ -197,6 +210,7 @@ To uninstall Sysbox:
 kubectl delete runtimeclass sysbox-runc
 kubectl delete -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/daemonset/sysbox-deploy-k8s.yaml
 kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/daemonset/sysbox-cleanup-k8s.yaml
+sleep 60
 kubectl delete -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/daemonset/sysbox-cleanup-k8s.yaml
 kubectl delete -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/rbac/sysbox-deploy-rbac.yaml
 ```
@@ -207,6 +221,7 @@ For Sysbox Enterprise, use the `sysbox-ee-cleanup-k8s.yaml` instead of the `sysb
 kubectl delete runtimeclass sysbox-runc
 kubectl delete -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/daemonset/sysbox-ee-deploy-k8s.yaml
 kubectl apply -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/daemonset/sysbox-ee-cleanup-k8s.yaml
+sleep 60
 kubectl delete -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/daemonset/sysbox-ee-cleanup-k8s.yaml
 kubectl delete -f https://raw.githubusercontent.com/nestybox/sysbox/master/sysbox-k8s-manifests/rbac/sysbox-deploy-rbac.yaml
 ```
@@ -219,6 +234,9 @@ NOTES:
 -   The uninstallation will temporarily disrupt all pods on the nodes where CRI-O
     and Sysbox were installed, for up to 1 minute, as they require the kubelet to
     restart.
+
+-   The 'sleep' instruction above is to ensure that kubelet has a chance to launch
+    and execute the 'cleanup' daemonset before it is removed in the subsequent step.
 
 ## Upgrading Sysbox or Sysbox Enterprise
 
